@@ -1,0 +1,23 @@
+services:
+  mongodb1:
+    container_name: mongodb1
+    image: dh-mirror.gitverse.ru/mongo:latest
+    volumes:
+      - mongodb1_data_container:/data/db
+
+  mongo-sharding:
+    container_name: mongo-sharding
+    build: 
+      context: mongo-sharding
+      dockerfile: Dockerfile
+    depends_on:
+      - mongodb1
+    ports:
+      - 8080:8080
+    environment:
+      MONGODB_URL: "mongodb://mongodb1"
+      MONGODB_DATABASE_NAME: "somedb"
+
+
+volumes:
+  mongodb1_data_container:
