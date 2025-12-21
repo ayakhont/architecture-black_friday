@@ -117,7 +117,7 @@ services:
     ports:
       - 8080:8080
     environment:
-      MONGODB_URL: "mongodb://mongos_router:27020"
+      MONGODB_URL: "mongodb://mongos_router:27020/somedb"
       MONGODB_DATABASE_NAME: "somedb"
 
 networks:

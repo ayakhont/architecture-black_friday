@@ -46,7 +46,7 @@ else:
 
 
 client = motor.motor_asyncio.AsyncIOMotorClient(DATABASE_URL)
-db = client[DATABASE_NAME]
+db = client.get_database(DATABASE_NAME)
 
 # Represents an ObjectId field in the database.
 # It will be represented as a `str` on the model so that it can be serialized to JSON.
