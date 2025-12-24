@@ -25,52 +25,152 @@ services:
       interval: 5s
       start_period: 10s
 
-  # 1-й шард
-  shard1:
-    image: mongo:latest
-    container_name: shard1
+  # 1-й шард реплика
+  shard1-1:
+    image: mongo:latest # docker образ
+    container_name: shard1-1
     restart: always
     ports:
-      - "27018:27018"
+      - "27010:27010"
     networks:
       app-network:
-        ipv4_address: 173.17.0.9
+        ipv4_address: 173.17.0.11
     volumes:
-      - shard1-data:/data/db
+      - shard1-1-data:/data/db
     command:
       [
         "--shardsvr",
         "--replSet",
-        "shard1",
+        "rs0",
         "--bind_ip_all",
         "--port",
-        "27018"
+        "27010"
+      ] #команда для создания реплики
+    healthcheck:
+      test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+
+  shard1-2:
+    image: mongo:latest
+    container_name: shard1-2
+    restart: always
+    ports:
+      - "27011:27011"
+    networks:
+      app-network:
+        ipv4_address: 173.17.0.2
+    volumes:
+      - shard1-2-data:/data/db
+    command:
+      [
+        "--shardsvr",
+        "--replSet",
+        "rs0",
+        "--bind_ip_all",
+        "--port",
+        "27011"
       ]
     healthcheck:
       test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')" ]
       interval: 5s
       start_period: 10s
 
-  # 2-й шард
-  shard2:
+  shard1-3:
     image: mongo:latest
-    container_name: shard2
+    container_name: shard1-3
     restart: always
     ports:
-      - "27019:27019"
+      - "27012:27012"
     networks:
       app-network:
-        ipv4_address: 173.17.0.8
+        ipv4_address: 173.17.0.3
     volumes:
-      - shard2-data:/data/db
+      - shard1-3-data:/data/db
     command:
       [
         "--shardsvr",
         "--replSet",
-        "shard2",
+        "rs0",
         "--bind_ip_all",
         "--port",
-        "27019"
+        "27012"
+      ]
+    healthcheck:
+      test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+
+  # 2-ой шард реплика
+  shard2-1:
+    image: mongo:latest # docker образ
+    container_name: shard2-1
+    restart: always
+    ports:
+      - "27013:27013"
+    networks:
+      app-network:
+        ipv4_address: 173.17.0.4
+    volumes:
+      - shard2-1-data:/data/db
+    command:
+      [
+        "--shardsvr",
+        "--replSet",
+        "rs1",
+        "--bind_ip_all",
+        "--port",
+        "27013"
+      ] #команда для создания реплики
+    healthcheck:
+      test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+
+  shard2-2:
+    image: mongo:latest
+    container_name: shard2-2
+    restart: always
+    ports:
+      - "27014:27014"
+    networks:
+      app-network:
+        ipv4_address: 173.17.0.5
+    volumes:
+      - shard2-2-data:/data/db
+    command:
+      [
+        "--shardsvr",
+        "--replSet",
+        "rs1",
+        "--bind_ip_all",
+        "--port",
+        "27014"
+      ]
+    healthcheck:
+      test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+
+  shard2-3:
+    image: mongo:latest
+    container_name: shard2-3
+    restart: always
+    ports:
+      - "27015:27015"
+    networks:
+      app-network:
+        ipv4_address: 173.17.0.6
+    volumes:
+      - shard2-3-data:/data/db
+    command:
+      [
+        "--shardsvr",
+        "--replSet",
+        "rs1",
+        "--bind_ip_all",
+        "--port",
+        "27015"
       ]
     healthcheck:
       test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')" ]
@@ -86,7 +186,7 @@ services:
       - "27020:27020"
     networks:
       app-network:
-        ipv4_address: 173.17.0.7
+        ipv4_address: 173.17.0.8
     command:
       [
         "mongos",
@@ -104,16 +204,20 @@ services:
   mongo-sharding:
     container_name: mongo-sharding
     build: 
-      context: mongo-sharding
+      context: mongo-sharding-repl
       dockerfile: Dockerfile
     depends_on:
-      - shard1
-      - shard2
+      - shard1-1
+      - shard1-2
+      - shard1-3
+      - shard2-1
+      - shard2-2
+      - shard2-3
       - configSrv
       - mongos_router
     networks:
       app-network:
-        ipv4_address: 173.17.0.6
+        ipv4_address: 173.17.0.7
     ports:
       - 8080:8080
     environment:
@@ -130,5 +234,9 @@ networks:
 
 volumes:
   config-data:
-  shard1-data:
-  shard2-data:
+  shard1-1-data:
+  shard1-2-data:
+  shard1-3-data:
+  shard2-1-data:
+  shard2-2-data:
+  shard2-3-data:
