@@ -3,7 +3,7 @@
 Запускаем mongodb и приложение из директории с проектом
 
 ```
-docker compose -f mongo-sharding-repl.yaml up -d
+docker compose -f sharding-repl-cache.yaml up -d
 ```
 
 Ждём пока поднимутся контейнеры (обычно > 40 секунд)
@@ -21,17 +21,16 @@ docker compose -f mongo-sharding-repl.yaml up -d
 
 ## Как проверить
 
+Запрос на ендпоинт /helloDoc/users с выводом времени выполнения
 ```
-curl -X 'GET' \
-  'http://localhost:8080/helloDoc/count' \
-  -H 'accept: application/json'
+curl -X 'GET' -s -o /dev/null -w "%{time_total}s\n" 'http://localhost:8080/helloDoc/users'   -H 'accept: application/json
 ```
-или
+Первый запрос займёт больше времени
 
-Открыть в браузере http://localhost:8080
-Дернуть эндпоинт http://localhost:8080/helloDoc/count с именем коллекции helloDoc
-
-В результате items_count должно быть 1000
+Второй запрос на тот же ендпоинт /helloDoc/users выполнится быстрее за счёт кеширования
+```
+curl -X 'GET' -s -o /dev/null -w "%{time_total}s\n" 'http://localhost:8080/helloDoc/users'   -H 'accept: application/json
+```
 
 ## Troubleshooting
 
