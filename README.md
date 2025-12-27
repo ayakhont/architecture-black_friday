@@ -1,35 +1,53 @@
-# pymongo-api
-
 ## Как запустить
 
-Запускаем mongodb и приложение
+Запускаем реплики и шарды mongodb, Redis и приложение из директории с проектом
 
-```shell
-docker compose up -d
+```
+docker compose -f sharding-repl-cache.yaml up -d
 ```
 
-Заполняем mongodb данными
+Ждём пока поднимутся контейнеры (обычно > 40 секунд)
 
-```shell
-./scripts/mongo-init.sh
+Запускаем скрипт
+```
+./scripts/mongo-init-sharding-repl.sh
+```
+Скрипт делает следующее:
+- Инициализируем конфигурационный сервер
+- Инициализируем два шарда (по три реплики в каждом)
+- Инициализируем роутер, добавляя шарды
+- создаем бд и коллекцию с шардированием
+- Проверяет что данные распределились по шардам
+
+## Как проверить количество записей
+
+```
+curl -X 'GET' \
+  'http://localhost:8080/helloDoc/count' \
+  -H 'accept: application/json'
+```
+или
+
+Открыть в браузере http://localhost:8080
+Дернуть эндпоинт http://localhost:8080/helloDoc/count с именем коллекции helloDoc
+
+В результате items_count должно быть 1000
+
+## Как проверить кэширование
+
+Запрос на ендпоинт /helloDoc/users с выводом времени выполнения
+```
+curl -X 'GET' -s -o /dev/null -w "%{time_total}s\n" 'http://localhost:8080/helloDoc/users'   -H 'accept: application/json
+```
+Первый запрос займёт больше времени
+
+Второй запрос на тот же ендпоинт /helloDoc/users выполнится быстрее за счёт кеширования
+```
+curl -X 'GET' -s -o /dev/null -w "%{time_total}s\n" 'http://localhost:8080/helloDoc/users'   -H 'accept: application/json
 ```
 
-## Как проверить
+## Troubleshooting
 
-### Если вы запускаете проект на локальной машине
-
-Откройте в браузере http://localhost:8080
-
-### Если вы запускаете проект на предоставленной виртуальной машине
-
-Узнать белый ip виртуальной машины
-
-```shell
-curl --silent http://ifconfig.me
-```
-
-Откройте в браузере http://<ip виртуальной машины>:8080
-
-## Доступные эндпоинты
-
-Список доступных эндпоинтов, swagger http://<ip виртуальной машины>:8080/docs
+В случае ошибки "MongoNetworkError: connect ECONNREFUSED" во время 
+выполнения скрипта инициализации, возможно контейнеры MongoDB ещё не готовы к подключению.
+Нужно подождать ещё немного и запустить скрипт ./scripts/mongo-init-sharding-repl.sh повторно.
