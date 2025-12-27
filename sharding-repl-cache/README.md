@@ -1,6 +1,6 @@
 ## Как запустить
 
-Запускаем реплики и шарды mongodb, Redis и приложение из директории с проектом
+Запускаем mongodb и приложение из директории с проектом
 
 ```
 docker compose -f sharding-repl-cache.yaml up -d
@@ -19,20 +19,6 @@ docker compose -f sharding-repl-cache.yaml up -d
 - создаем бд и коллекцию с шардированием
 - Проверяет что данные распределились по шардам
 
-## Как проверить количество записей
-
-```
-curl -X 'GET' \
-  'http://localhost:8080/helloDoc/count' \
-  -H 'accept: application/json'
-```
-или
-
-Открыть в браузере http://localhost:8080
-Дернуть эндпоинт http://localhost:8080/helloDoc/count с именем коллекции helloDoc
-
-В результате items_count должно быть 1000
-
 ## Как проверить кэширование
 
 Запрос на ендпоинт /helloDoc/users с выводом времени выполнения
@@ -50,4 +36,4 @@ curl -X 'GET' -s -o /dev/null -w "%{time_total}s\n" 'http://localhost:8080/hello
 
 В случае ошибки "MongoNetworkError: connect ECONNREFUSED" во время 
 выполнения скрипта инициализации, возможно контейнеры MongoDB ещё не готовы к подключению.
-Нужно подождать ещё немного и запустить скрипт ./scripts/mongo-init-sharding-repl.sh повторно.
+Нужно подождать ещё немного и запустить скрипт повторно.

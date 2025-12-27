@@ -13,34 +13,34 @@ rs.initiate(
 );
 EOF
 
-# Инициализируем первый шард
-docker exec -i shard1 mongosh --port 27018 --quiet <<EOF
+# Инициализируем первую шард реплику сет
+docker exec -i shard1-1 mongosh --port 27010 --quiet <<EOF
 rs.initiate(
-    {
-      _id : "shard1",
-      members: [
-        { _id : 0, host : "shard1:27018" },
-      ]
-    }
+    {_id: "rs0", members: [
+      {_id: 0, host: "shard1-1:27010"},
+      {_id: 1, host: "shard1-2:27011"},
+      {_id: 2, host: "shard1-3:27012"}
+    ]
+  }
 );
 EOF
 
-# Инициализируем второй шард
-docker exec -i shard2 mongosh --port 27019 --quiet <<EOF
+# Инициализируем вторую шард реплику сет
+docker exec -i shard2-1 mongosh --port 27013 --quiet <<EOF
 rs.initiate(
-    {
-      _id : "shard2",
-      members: [
-        { _id : 1, host : "shard2:27019" }
-      ]
-    }
-  );
+    {_id: "rs1", members: [
+      {_id: 3, host: "shard2-1:27013"},
+      {_id: 4, host: "shard2-2:27014"},
+      {_id: 5, host: "shard2-3:27015"}
+    ]
+  }
+);
 EOF
 
 # Инициализируем роутер, добавляем шарды, создаем бд и коллекцию с шардированием
 docker exec -i mongos_router mongosh --port 27020 --quiet <<EOF
-sh.addShard( "shard1/shard1:27018");
-sh.addShard( "shard2/shard2:27019");
+sh.addShard( "rs0/shard1-1:27010,shard1-2:27011,shard1-3:27012");
+sh.addShard( "rs1/shard2-1:27013,shard2-2:27014,shard2-3:27015");
 sh.enableSharding("somedb");
 sh.shardCollection("somedb.helloDoc", { "name" : "hashed" } );
 use somedb;
@@ -49,12 +49,12 @@ db.helloDoc.countDocuments();
 EOF
 
 # Проверяем что данные распределились по шардам
-docker exec -i shard1 mongosh --port 27018 --quiet <<EOF
+docker exec -i shard1-1 mongosh --port 27010 --quiet <<EOF
 use somedb;
 db.helloDoc.countDocuments();
 EOF
 
-docker exec -i shard2 mongosh --port 27019 --quiet <<EOF
+docker exec -i shard2-1 mongosh --port 27013 --quiet <<EOF
 use somedb;
 db.helloDoc.countDocuments();
 EOF
